@@ -61,10 +61,9 @@ xml_data = f"""<?xml version="1.0" encoding="utf-8"?>
 </entry>
 """
 
-# 5. WSSE認証ヘッダーの作成（日時のフォーマットを修正）
+# 5. WSSE認証ヘッダーの作成
 def make_wsse_header(username, api_key):
     nonce = secrets.token_bytes(16)
-    # 【修正】マイクロ秒を含めない、livedoor専用のフォーマットに統一
     created = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 
     sha = hashlib.sha1()
@@ -83,8 +82,9 @@ try:
     response = requests.post(
         url,
         headers={
-            "Content-Type": "application/atom+xml; type=entry",
-            "X-WSSE": wsse_header
+            "Authorization": 'WSSE profile="UsernameToken"', # 【ここを追加！】livedoorに必須の認証ヘッダー
+            "X-WSSE": wsse_header,
+            "Content-Type": "application/atom+xml; type=entry"
         },
         data=xml_data.encode("utf-8")
     )
