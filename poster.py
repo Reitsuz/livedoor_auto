@@ -12,7 +12,7 @@ LIVEDOOR_ID = os.environ.get("LIVEDOOR_ID")
 API_KEY = os.environ.get("LIVEDOOR_KEY")
 BLOG_ID = os.environ.get("BLOG_ID")
 
-# RSSフィードの候補リスト（ジャンル名とURLのセット）
+# RSSフィードの候補リスト
 RSS_SOURCES = [
     {"genre": "Yahoo!主要ニュース", "url": "https://news.yahoo.co.jp/rss/topics/top-picks.xml"},
     {"genre": "Yahoo!IT・科学ニュース", "url": "https://news.yahoo.co.jp/rss/topics/it.xml"},
@@ -21,7 +21,6 @@ RSS_SOURCES = [
     {"genre": "GIGAZINE（IT・ガジェット）", "url": "https://gigazine.net/news/rss_2.0/"}
 ]
 
-# リストの中からランダムで1つを選択
 selected_source = random.choice(RSS_SOURCES)
 genre_name = selected_source["genre"]
 RSS_URL = selected_source["url"]
@@ -31,10 +30,7 @@ print(f"RSSフィードを取得中: {RSS_URL}")
 
 # 2. RSSから最新5件を取得してHTMLを組み立てる
 feed = feedparser.parse(RSS_URL)
-
 content_html = f"<p>本日の「{genre_name}」から最新のトピックをお届けします。</p><ul style='line-height: 1.8;'>"
-
-# feedから5件取得（フィードが空だった場合のエラー防止付き）
 entries = feed.entries[:5] if feed.entries else []
 
 if not entries:
@@ -47,7 +43,7 @@ else:
 
 content_html += f"</ul><p>※この記事は「{genre_name}」のRSSを元に自動生成されています。</p>"
 
-# 3. タイトル（ジャンル名を入れることで分かりやすく）
+# 3. タイトル
 today_str = datetime.datetime.now().strftime("%Y年%m月%d日")
 article_title = f"{today_str}の最新ニュース【{genre_name}】"
 
@@ -65,10 +61,11 @@ xml_data = f"""<?xml version="1.0" encoding="utf-8"?>
 </entry>
 """
 
-# 5. WSSE認証ヘッダーの作成
+# 5. WSSE認証ヘッダーの作成（日時のフォーマットを修正）
 def make_wsse_header(username, api_key):
     nonce = secrets.token_bytes(16)
-    created = datetime.datetime.utcnow().isoformat() + "Z"
+    # 【修正】マイクロ秒を含めない、livedoor専用のフォーマットに統一
+    created = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 
     sha = hashlib.sha1()
     sha.update(nonce + created.encode('utf-8') + api_key.encode('utf-8'))
