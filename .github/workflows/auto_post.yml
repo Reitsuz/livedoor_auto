@@ -2,67 +2,29 @@ name: Livedoor Auto Post
 
 on:
   schedule:
-    # 毎日 日本時間の午前9時（UTC 午前0時）に自動実行
-    - cron: '0 0 * * *'
-  workflow_dispatch: # GitHubの画面から手動でいつでも実行できるボタンを追加
+    - cron: '0 0 * * *' # 毎日 日本時間AM9時に自動実行
+  workflow_dispatch: # ← コレがボタンを出す魔法の呪文です！
 
 jobs:
   post-blog:
     runs-on: ubuntu-latest
-
     steps:
-    # 1. リポジトリのコードを仮想環境にチェックアウト
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 2. Python環境のセットアップ
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    # 3. 必要なライブラリのインストール（ご提示いただいた部分）
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install requests feedparser
 
-    # 4. Pythonスクリプトの実行（環境変数を安全に渡す）
     - name: Run script
       env:
         LIVEDOOR_ID: ${{ secrets.LIVEDOOR_ID }}
         LIVEDOOR_KEY: ${{ secrets.LIVEDOOR_KEY }}
         BLOG_ID: ${{ secrets.BLOG_ID }}
       run: python poster.py
-    ```
-
----
-
-### 2. ⚠️ 超重要：GitHubに「合言葉（Secrets）」を設定する
-
-Pythonコードの中にある `os.environ.get(...)` は、GitHubのサーバーに設定された隠し変数（環境変数）を読み込む仕組みです。LivedoorのIDやAPIキーをコードに直接書くと全世界に丸見えになってしまうため、**GitHubの設定画面から安全に登録する**必要があります。
-
-今のリポジトリの画面から、以下の手順で3つの値を登録してください。
-
-1. リポジトリのトップページ上部にある **「⚙️ Settings」** タブをクリックします。
-2. 左メニューの下の方にある **「Secrets and variables」** をクリックし、開いたメニューから **「Actions」** を選択します。
-3. **「New repository secret」** という緑色のボタンをクリックします。
-4. 以下の3つを、1つずつ登録していきます。
-
-| Name (名前) | Value (値の中身) |
-| :--- | :--- |
-| **`LIVEDOOR_ID`** | あなたのlivedoor ID |
-| **`LIVEDOOR_KEY`** | livedoorブログのAPIキー（AtomPubのパスワード） |
-| **`BLOG_ID`** | あなたのブログID（URLの `xxx.livedoor.blog` の `xxx` の部分など） |
-
----
-
-### 🚀 動かし方とテスト方法
-
-設定がすべて終わったら、自動実行（毎朝9時）を待たずに**今すぐ動くかテスト**できます。
-
-1. リポジトリの **「Actions」** タブをクリックします。
-2. 左側のリストに **「Livedoor Auto Post」** という名前のワークフローができているので、それをクリックします。
-3. 画面右側に **「Run workflow」** という薄いグレーのボタンが表示されるので、それをクリックして緑色の「Run workflow」ボタンを押します。
-
-これでGitHubのサーバーが起動し、`poster.py` が実行されます。処理が成功（緑のチェックマーク ✅）になれば、livedoorブログに自動で記事が投稿されているはずです！試してみてください！
