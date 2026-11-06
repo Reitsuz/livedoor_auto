@@ -1,4 +1,4 @@
-name: Livedoor Auto Post 
+name: Livedoor Auto Post  
 
 on:
   schedule:
